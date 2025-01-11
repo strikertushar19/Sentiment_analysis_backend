@@ -1,19 +1,57 @@
-
-# purely_sad_sentences= [
-#     "I feel empty inside.",
-#     "Everything feels so heavy right now.",
-#     "I can't stop crying lately.",
-#     "Life just feels meaningless to me.",
-#     "I'm overwhelmed with this constant sadness.",
-#     "I don't know how to deal with this pain anymore.",
-#     "I miss how things used to be.",
-#     "It feels like the sadness will never go away.",
-#     "I just want to disappear for a while.",
-#     "My heart feels broken and I can't fix it."
-# ]
-# for i in purely_sad_sentences:
-#   print(check_word_in_sadness(i))
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from metrics.sadness import check_sadness_sentiment
+from metrics.happiness import check_happiness_sentiment
+from metrics.fearness import check_fearness_sentiment
+from metrics.angerness import check_angerness_sentiment
+from pydantic import BaseModel
 
 
-  
+class InputData(BaseModel):
+    prompt: str
 
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/sadness")
+def sadness(data: InputData):
+    return check_sadness_sentiment(data.prompt)
+
+
+@app.post("/happiness")
+def happiness(data: InputData):
+    return check_happiness_sentiment(data.prompt)
+
+
+@app.post("/fearness")
+def fearness(data: InputData):
+    return check_fearness_sentiment(data.prompt)
+
+
+@app.post("/angerness")
+def angerness(data: InputData):
+    return check_angerness_sentiment(data.prompt)
+
+
+@app.post("/allmetrics")
+def allmetrics(data: InputData):
+    results = []
+    results.append(check_angerness_sentiment(data.prompt))
+    results.append(check_fearness_sentiment(data.prompt))
+    results.append(check_sadness_sentiment(data.prompt))
+    results.append(check_happiness_sentiment(data.prompt))
+
+    return results
+
+
+@app.get("/")
+def home():
+    return {"message": "Home page"}
