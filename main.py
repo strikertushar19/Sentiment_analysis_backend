@@ -23,23 +23,31 @@ app.add_middleware(
 
 @app.post("/sadness")
 def sadness(data: InputData):
-    return check_sadness_sentiment(data.prompt)
+    results=[]
+    results.append(check_sadness_sentiment(data.prompt))
+    return results
 
 
 @app.post("/happiness")
 def happiness(data: InputData):
-    return check_happiness_sentiment(data.prompt)
+    results=[]
+    results.append(check_happiness_sentiment(data.prompt))
+    return results
 
 
 @app.post("/fearness")
 def fearness(data: InputData):
-    return check_fearness_sentiment(data.prompt)
+    results = []
+    results.append(check_fearness_sentiment(data.prompt))
+    return results
 
 
 @app.post("/angerness")
 def angerness(data: InputData):
-    return check_angerness_sentiment(data.prompt)
+    results = []
+    results.append(check_angerness_sentiment(data.prompt))
 
+    return results
 
 @app.post("/allmetrics")
 def allmetrics(data: InputData):
