@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from metrics.sadness import check_sadness_sentiment
 from metrics.happiness import check_happiness_sentiment
@@ -23,50 +23,55 @@ app.add_middleware(
 
 
 # Helper function to append logs to a file
-def log_to_file(endpoint: str, prompt: str, response: dict):
+def log_to_file(endpoint: str, prompt: str, response: dict, client_ip: str):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"{timestamp} | Endpoint: {endpoint} | Prompt: {prompt} | Response: {response}\n"
+    log_entry = f"{timestamp} | Endpoint: {endpoint} | IP: {client_ip} | Prompt: {prompt} | Response: {response}\n"
     with open("interaction_logs.txt", "a") as log_file:
         log_file.write(log_entry)
 
 
 @app.post("/sadness")
-def sadness(data: InputData):
+async def sadness(data: InputData, request: Request):
+    client_ip = request.client.host
     results = [check_sadness_sentiment(data.prompt)]
-    log_to_file("/sadness", data.prompt, {"results": results})
+    log_to_file("/sadness", data.prompt, {"results": results}, client_ip)
     return results
 
 
 @app.post("/happiness")
-def happiness(data: InputData):
+async def happiness(data: InputData, request: Request):
+    client_ip = request.client.host
     results = [check_happiness_sentiment(data.prompt)]
-    log_to_file("/happiness", data.prompt, {"results": results})
+    log_to_file("/happiness", data.prompt, {"results": results}, client_ip)
     return results
 
 
 @app.post("/fearness")
-def fearness(data: InputData):
+async def fearness(data: InputData, request: Request):
+    client_ip = request.client.host
     results = [check_fearness_sentiment(data.prompt)]
-    log_to_file("/fearness", data.prompt, {"results": results})
+    log_to_file("/fearness", data.prompt, {"results": results}, client_ip)
     return results
 
 
 @app.post("/angerness")
-def angerness(data: InputData):
+async def angerness(data: InputData, request: Request):
+    client_ip = request.client.host
     results = [check_angerness_sentiment(data.prompt)]
-    log_to_file("/angerness", data.prompt, {"results": results})
+    log_to_file("/angerness", data.prompt, {"results": results}, client_ip)
     return results
 
 
 @app.post("/allmetrics")
-def allmetrics(data: InputData):
+async def allmetrics(data: InputData, request: Request):
+    client_ip = request.client.host
     results = {
         "angerness": check_angerness_sentiment(data.prompt),
         "fearness": check_fearness_sentiment(data.prompt),
         "sadness": check_sadness_sentiment(data.prompt),
         "happiness": check_happiness_sentiment(data.prompt),
     }
-    log_to_file("/allmetrics", data.prompt, results)
+    log_to_file("/allmetrics", data.prompt, results, client_ip)
     return results
 
 
