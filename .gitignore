@@ -3,3 +3,5 @@ metrics/__pycache__
 __pycache__
 .env
 /interaction_logs.txt
+
+/chatApis/os

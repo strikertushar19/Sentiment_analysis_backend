@@ -1,11 +1,29 @@
-from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from metrics.sadness import check_sadness_sentiment
 from metrics.happiness import check_happiness_sentiment
 from metrics.fearness import check_fearness_sentiment
 from metrics.angerness import check_angerness_sentiment
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+
 import datetime
+from chatApis.file_search import handle_request
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
+from sqlalchemy.orm import Session
+from openai import OpenAI
+import os
+import openai
+from dotenv import load_dotenv
+from database.database import SessionLocal, engine, File
+from schemas import FileRequest, FileResponse
+from typing import List, Dict, Any
+
+
+# Load environment variables
+load_dotenv()
+
+# Initialize FastAPI app
+app = FastAPI()
 
 
 class InputData(BaseModel):
@@ -20,6 +38,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Database session dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 # Helper function to append logs to a file
@@ -75,6 +101,31 @@ async def allmetrics(data: InputData, request: Request):
     return results
 
 
+
+@app.post("/upload-file/")
+async def upload_file(file: UploadFile, db: Session = Depends(get_db)):
+    file_content = await file.read()
+
+    db_file = File(filename=file.filename, content=file_content)
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+
+    return {"filename": db_file.filename, "id": db_file.id}
+
+
 @app.get("/")
 def home():
     return {"message": "Home page"}
+
+
+
+@app.post("/find_pdf/")
+async def find_pdf(user_input: str):
+    result = await handle_request(user_input)
+    
+    if result is None:
+        return {"error": "No PDF found."}  
+    
+    return result 
+
